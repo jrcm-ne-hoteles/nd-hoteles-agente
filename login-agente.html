@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Agente · ND Hoteles</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(0, 180, 120, 0.12), transparent 35%),
+        linear-gradient(180deg, #050505 0%, #0b0b0b 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+    }
+
+    .logo-wrap {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .logo-wrap img {
+      width: 140px;
+      max-width: 100%;
+      filter: drop-shadow(0 0 18px rgba(255,255,255,0.08));
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      text-align: center;
+      color: rgba(255,255,255,0.72);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.82);
+      font-weight: 700;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      outline: none;
+      font-size: 15px;
+    }
+
+    .field input::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, #17b66f, #0f8b55);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      margin-top: 8px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.98;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255, 80, 80, 0.12);
+      border: 1px solid rgba(255, 80, 80, 0.22);
+      color: #ffb3b3;
+      font-size: 14px;
+    }
+
+    .loading {
+      display: none;
+      margin-top: 14px;
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      text-align: center;
+      color: rgba(255,255,255,0.42);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-wrap">
+      <img src="https://grupondhoteles.com/wp-content/uploads/Logotipo-ND-Hoteles-blanco.webp" alt="ND Hoteles" />
+    </div>
+
+    <h1>Acceso de agentes</h1>
+    <p class="subtitle">
+      Inicia sesión con tu cuenta de agente para acceder al panel operativo de recepción.
+    </p>
+
+    <div class="field">
+      <label for="email">Correo del agente</label>
+      <input id="email" type="email" placeholder="ejemplo@ndhoteles.com" autocomplete="username" />
+    </div>
+
+    <div class="field">
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" placeholder="Introduce tu contraseña" autocomplete="current-password" />
+    </div>
+
+    <button class="btn" id="loginBtn">Entrar al panel de agente</button>
+
+    <div class="loading" id="loadingMsg">Verificando acceso...</div>
+    <div class="error" id="errorMsg">No se pudo iniciar sesión.</div>
+
+    <div class="footer-note">ND Hoteles · acceso interno seguro</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtJWCzJ4H5Sn2hJkyu7GvnK56pqWDdnr4",
+      authDomain: "nd-hoteles-kiosko.firebaseapp.com",
+      projectId: "nd-hoteles-kiosko"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const loginBtn = document.getElementById("loginBtn");
+    const errorMsg = document.getElementById("errorMsg");
+    const loadingMsg = document.getElementById("loadingMsg");
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.replace("agente.html");
+      }
+    });
+
+    function mostrarError(texto) {
+      errorMsg.textContent = texto;
+      errorMsg.style.display = "block";
+      loadingMsg.style.display = "none";
+      loginBtn.disabled = false;
+    }
+
+    async function entrar() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      errorMsg.style.display = "none";
+
+      if (!email) {
+        mostrarError("Introduce el correo del agente.");
+        return;
+      }
+
+      if (!password) {
+        mostrarError("Introduce la contraseña.");
+        return;
+      }
+
+      try {
+        loginBtn.disabled = true;
+        loadingMsg.style.display = "block";
+
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.replace("agente.html");
+      } catch (error) {
+        console.error("Error de login:", error);
+        mostrarError("Correo o contraseña incorrectos.");
+      }
+    }
+
+    loginBtn.addEventListener("click", entrar);
+
+    emailInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") entrar();
+    });
+
+    passwordInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") entrar();
+    });
+  </script>
+</body>
+</html>
