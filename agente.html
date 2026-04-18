@@ -500,6 +500,138 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
   padding: 10px 12px;
 }
 
+.history-toolbar input {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-width: 220px;
+}
+
+.history-toolbar .toolbar-separator {
+  color: rgba(255,255,255,0.35);
+  font-weight: 700;
+  margin: 0 2px;
+}
+
+.history-toolbar .history-action-btn {
+  padding: 9px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+
+.history-row-selected td {
+  background: rgba(125,255,179,0.08);
+}
+
+.history-row-selected td:first-child {
+  box-shadow: inset 4px 0 0 #7dffb3;
+}
+
+.history-table tbody tr {
+  cursor: pointer;
+}
+
+.history-table tbody tr:hover td {
+  background: rgba(255,255,255,0.03);
+}
+
+.history-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.history-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-pager button {
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.history-page-info {
+  color: rgba(255,255,255,0.68);
+  font-size: 13px;
+}
+
+.history-detail-card {
+  display: none;
+  margin-top: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 18px 34px rgba(0,0,0,0.18);
+}
+
+.history-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.history-detail-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.history-detail-meta {
+  color: rgba(255,255,255,0.62);
+  font-size: 13px;
+}
+
+.history-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.history-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-detail-field.full {
+  grid-column: 1 / -1;
+}
+
+.history-detail-field label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.history-detail-field input,
+.history-detail-field textarea {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.history-detail-field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
 .table-wrap {
   overflow-x: auto;
   background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
@@ -741,8 +873,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
         <option value="videollamada">Finalizar check-in</option>
         <option value="ayuda">Ayuda</option>
         <option value="urgente">Urgencia</option>
-        <option value="telefono">Teléfono</option>
       </select>
+      <input id="historySearch" type="text" placeholder="Buscar por nombre, teléfono, email, hotel u observaciones">
+      <span class="toolbar-separator">|</span>
+      <button class="btn-guardar history-action-btn" onclick="guardarSeleccion()">Guardar</button>
+      <button class="btn-archivar history-action-btn" onclick="archivarSeleccion()">Archivar</button>
+      <button class="btn-finalizar history-action-btn" onclick="borrarSeleccion()">Borrar</button>
     </div>
 
     <div class="table-wrap">
@@ -754,15 +890,58 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
             <th>Punto</th>
             <th>Botón origen</th>
             <th>Canal</th>
-            <th>Contacto editable</th>
+            <th>Huésped</th>
+            <th>Teléfono</th>
             <th>Estado</th>
-            <th>Anotación</th>
-            <th>Acción</th>
+            <th>Observación</th>
           </tr>
         </thead>
         <tbody id="historyBody"></tbody>
       </table>
       <div id="historyEmpty" class="history-empty">Todavía no hay registros históricos para mostrar.</div>
+
+      <div class="history-footer">
+        <div id="historySelectionState" class="history-page-info">Selecciona un registro para editarlo.</div>
+        <div class="history-pager">
+          <button id="historyPrevBtn" type="button">⬅ Anterior</button>
+          <span id="historyPageInfo" class="history-page-info">Página 1 de 1</span>
+          <button id="historyNextBtn" type="button">Siguiente ➡</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="historyDetailCard" class="history-detail-card">
+      <div class="history-detail-head">
+        <h3>Ficha del registro seleccionado</h3>
+        <div id="historyDetailMeta" class="history-detail-meta">Sin selección</div>
+      </div>
+
+      <div class="history-detail-grid">
+        <div class="history-detail-field">
+          <label for="historyEditNombre">Nombre</label>
+          <input id="historyEditNombre" type="text" placeholder="Nombre del huésped">
+        </div>
+
+        <div class="history-detail-field">
+          <label for="historyEditTelefono">Teléfono</label>
+          <input id="historyEditTelefono" type="text" placeholder="Teléfono de contacto">
+        </div>
+
+        <div class="history-detail-field">
+          <label for="historyEditEmail">Email</label>
+          <input id="historyEditEmail" type="email" placeholder="Email del huésped">
+        </div>
+
+        <div class="history-detail-field">
+          <label for="historyEditEstado">Estado</label>
+          <input id="historyEditEstado" type="text" placeholder="Estado" disabled>
+        </div>
+
+        <div class="history-detail-field full">
+          <label for="historyEditNota">Observaciones</label>
+          <textarea id="historyEditNota" placeholder="Escribe aquí las observaciones del registro seleccionado"></textarea>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -774,7 +953,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -796,6 +975,9 @@ let agenteEmailActual = "";
 let agenteUidActual = "";
 let inicializado = false;
 let historicoGlobal = [];
+let registroSeleccionado = null;
+let paginaHistoricoActual = 1;
+const HISTORICO_POR_PAGINA = 5;
 
 const listaVideollamadas = document.getElementById("lista-videollamadas");
 const listaAyuda = document.getElementById("lista-ayuda");
@@ -803,6 +985,18 @@ const listaUrgente = document.getElementById("lista-urgente");
 const historyBody = document.getElementById("historyBody");
 const historyEmpty = document.getElementById("historyEmpty");
 const historyFilter = document.getElementById("historyFilter");
+const historySearch = document.getElementById("historySearch");
+const historyPrevBtn = document.getElementById("historyPrevBtn");
+const historyNextBtn = document.getElementById("historyNextBtn");
+const historyPageInfo = document.getElementById("historyPageInfo");
+const historySelectionState = document.getElementById("historySelectionState");
+const historyDetailCard = document.getElementById("historyDetailCard");
+const historyDetailMeta = document.getElementById("historyDetailMeta");
+const historyEditNombre = document.getElementById("historyEditNombre");
+const historyEditTelefono = document.getElementById("historyEditTelefono");
+const historyEditEmail = document.getElementById("historyEditEmail");
+const historyEditEstado = document.getElementById("historyEditEstado");
+const historyEditNota = document.getElementById("historyEditNota");
 const alerta = document.getElementById("alerta");
 const avisoDestino = document.getElementById("avisoDestino");
 const estado = document.getElementById("estado");
@@ -958,7 +1152,27 @@ guardarManual?.addEventListener("click", async () => {
   }
 });
 
-historyFilter?.addEventListener("change", renderHistorico);
+historyFilter?.addEventListener("change", () => {
+  paginaHistoricoActual = 1;
+  renderHistorico();
+});
+
+historySearch?.addEventListener("input", () => {
+  paginaHistoricoActual = 1;
+  renderHistorico();
+});
+
+historyPrevBtn?.addEventListener("click", () => {
+  if (paginaHistoricoActual > 1) {
+    paginaHistoricoActual -= 1;
+    renderHistorico();
+  }
+});
+
+historyNextBtn?.addEventListener("click", () => {
+  paginaHistoricoActual += 1;
+  renderHistorico();
+});
 
 function normalizarTipo(valor) {
   const tipo = (valor || "").toLowerCase();
@@ -1345,9 +1559,25 @@ window.guardarContacto = async (id) => {
 
 window.guardarHistoricoCompleto = async (id) => {
   try {
-    const nombreInput = document.getElementById(`nombre-historico-${id}`);
-    const telefonoInput = document.getElementById(`telefono-historico-${id}`);
-    const notaInput = document.getElementById(`nota-historico-${id}`);
+    const item = historicoGlobal.find((entry) => entry.docSnap.id === id);
+    if (!item) return;
+    registroSeleccionado = { id: item.docSnap.id, data: item.data };
+    abrirFichaHistorico(item.data);
+    await guardarSeleccion();
+  } catch (error) {
+    console.error(error);
+    alert("Error al guardar los cambios del histórico");
+  }
+};
+
+window.guardarSeleccion = async () => {
+  try {
+    if (!registroSeleccionado) {
+      alert("Selecciona un registro del histórico");
+      return;
+    }
+
+    const id = registroSeleccionado.id;
 
     const r1 = await fetch(`${API_BASE}/avisos/${id}/contacto`, {
       method: "POST",
@@ -1356,13 +1586,14 @@ window.guardarHistoricoCompleto = async (id) => {
         "X-Agent-Token": AGENT_TOKEN
       },
       body: JSON.stringify({
-        nombreHuesped: nombreInput ? nombreInput.value.trim() : "",
-        telefonoContacto: telefonoInput ? telefonoInput.value.trim() : ""
+        nombreHuesped: historyEditNombre ? historyEditNombre.value.trim() : "",
+        telefonoContacto: historyEditTelefono ? historyEditTelefono.value.trim() : "",
+        email: historyEditEmail ? historyEditEmail.value.trim() : ""
       })
     });
 
     const d1 = await r1.json();
-    if (!r1.ok) throw new Error(d1.detail || "Error al guardar contacto del histórico");
+    if (!r1.ok) throw new Error(d1.detail || "Error al guardar contacto");
 
     const r2 = await fetch(`${API_BASE}/avisos/${id}/anotacion`, {
       method: "POST",
@@ -1370,17 +1601,43 @@ window.guardarHistoricoCompleto = async (id) => {
         "Content-Type": "application/json",
         "X-Agent-Token": AGENT_TOKEN
       },
-      body: JSON.stringify({ anotacionAgente: notaInput ? notaInput.value.trim() : "" })
+      body: JSON.stringify({
+        anotacionAgente: historyEditNota ? historyEditNota.value.trim() : ""
+      })
     });
 
     const d2 = await r2.json();
-    if (!r2.ok) throw new Error(d2.detail || "Error al guardar anotación del histórico");
+    if (!r2.ok) throw new Error(d2.detail || "Error al guardar observaciones");
 
-    estado.textContent = "Histórico actualizado correctamente.";
+    try {
+      await updateDoc(doc(db, "avisos", id), {
+        email: historyEditEmail ? historyEditEmail.value.trim() : ""
+      });
+    } catch (emailError) {
+      console.warn("No se pudo actualizar email directamente en Firestore:", emailError);
+    }
+
+    estado.textContent = "Registro histórico actualizado correctamente.";
   } catch (error) {
     console.error(error);
-    alert("Error al guardar los cambios del histórico");
+    alert("Error al guardar el registro seleccionado");
   }
+};
+
+window.archivarSeleccion = () => {
+  if (!registroSeleccionado) {
+    alert("Selecciona un registro del histórico");
+    return;
+  }
+  archivarCaso(registroSeleccionado.id);
+};
+
+window.borrarSeleccion = () => {
+  if (!registroSeleccionado) {
+    alert("Selecciona un registro del histórico");
+    return;
+  }
+  borrarCaso(registroSeleccionado.id);
 };
 
 function crearTarjeta(docSnap, data) {
@@ -1529,30 +1786,44 @@ function crearFilaHistorico(docSnap, data) {
   const canalLabel = etiquetaCanal(canal);
   const nombreHuesped = data.nombreHuesped || "";
   const telefonoContacto = data.telefonoContacto || "";
+  const anotacion = (data.anotacionAgente || "").replace(/\s+/g, " ").trim();
+  const anotacionResumen = anotacion.length > 70 ? anotacion.slice(0, 70) + "…" : anotacion;
 
   const tr = document.createElement("tr");
+
+  tr.addEventListener("click", () => {
+    document.querySelectorAll("#historyBody tr").forEach((row) => row.classList.remove("history-row-selected"));
+    tr.classList.add("history-row-selected");
+    registroSeleccionado = { id: docSnap.id, data };
+    abrirFichaHistorico(data);
+    if (historySelectionState) {
+      historySelectionState.textContent = `Seleccionado: ${data.hotel || "ND Hoteles"} · ${tipoLabel}`;
+    }
+  });
+
   tr.innerHTML = `
     <td>${fechaLegible(data.creado)}</td>
     <td>${data.hotel || "ND Hoteles"}</td>
     <td>${data.punto || "Punto no indicado"}</td>
     <td><span class="history-origin ${tipoClase}">${tipoLabel}</span></td>
     <td><span class="history-channel ${canal}">${canalLabel}</span></td>
-    <td class="history-cell-contacto">
-      <input id="nombre-historico-${docSnap.id}" type="text" placeholder="Nombre del huésped" value="${nombreHuesped.replace(/"/g, '&quot;')}">
-      <input id="telefono-historico-${docSnap.id}" type="text" placeholder="Teléfono contacto" value="${telefonoContacto.replace(/"/g, '&quot;')}">
-    </td>
+    <td>${nombreHuesped || "-"}</td>
+    <td>${telefonoContacto || "-"}</td>
     <td>${estadoLabel}</td>
-    <td class="history-cell-nota">
-      <textarea id="nota-historico-${docSnap.id}" placeholder="Editar anotación posterior...">${data.anotacionAgente || ""}</textarea>
-    </td>
-    <td>
-      <div class="history-actions">
-        <button class="btn-guardar" onclick="guardarHistoricoCompleto('${docSnap.id}')">Guardar</button>
-        <button class="btn-archivar" onclick="archivarCaso('${docSnap.id}')">Archivar</button>
-        <button class="btn-finalizar" onclick="borrarCaso('${docSnap.id}')">Borrar</button>
-      </div>
-    </td>`;
+    <td>${anotacionResumen || "-"}</td>`;
   return tr;
+}
+
+function abrirFichaHistorico(data) {
+  if (historyDetailCard) historyDetailCard.style.display = "block";
+  if (historyDetailMeta) {
+    historyDetailMeta.textContent = `${fechaLegible(data.creado)} · ${data.hotel || "ND Hoteles"} · ${etiquetaTipo(data.tipo)}`;
+  }
+  if (historyEditNombre) historyEditNombre.value = data.nombreHuesped || "";
+  if (historyEditTelefono) historyEditTelefono.value = data.telefonoContacto || "";
+  if (historyEditEmail) historyEditEmail.value = data.email || "";
+  if (historyEditEstado) historyEditEstado.value = etiquetaEstado(data.estado);
+  if (historyEditNota) historyEditNota.value = data.anotacionAgente || "";
 }
 
 function renderHistorico() {
@@ -1560,21 +1831,45 @@ function renderHistorico() {
 
   historyBody.innerHTML = "";
   const filtro = historyFilter.value;
+  const textoBusqueda = (historySearch?.value || "").toLowerCase().trim();
 
-  const filtrado = historicoGlobal.filter((item) => {
+  const filtradoBase = historicoGlobal.filter((item) => {
     const tipo = normalizarTipo(item.data.tipo);
-    const canal = (item.data.origenCanal || "kiosko").toLowerCase();
+    const searchable = [
+      item.data.nombreHuesped || "",
+      item.data.telefonoContacto || "",
+      item.data.email || "",
+      item.data.hotel || "",
+      item.data.punto || "",
+      item.data.anotacionAgente || ""
+    ].join(" ").toLowerCase();
 
-    if (filtro === "todos") return true;
-    if (filtro === "telefono") return canal === "telefono";
-    return tipo === filtro;
+    if (filtro !== "todos" && tipo !== filtro) return false;
+    if (textoBusqueda && !searchable.includes(textoBusqueda)) return false;
+    return true;
   });
 
+  const totalPaginas = Math.max(1, Math.ceil(filtradoBase.length / HISTORICO_POR_PAGINA));
+  if (paginaHistoricoActual > totalPaginas) paginaHistoricoActual = totalPaginas;
+
+  const inicio = (paginaHistoricoActual - 1) * HISTORICO_POR_PAGINA;
+  const filtrado = filtradoBase.slice(inicio, inicio + HISTORICO_POR_PAGINA);
+
   filtrado.forEach((item) => {
-    historyBody.appendChild(crearFilaHistorico(item.docSnap, item.data));
+    const row = crearFilaHistorico(item.docSnap, item.data);
+    if (registroSeleccionado && registroSeleccionado.id === item.docSnap.id) {
+      row.classList.add("history-row-selected");
+    }
+    historyBody.appendChild(row);
   });
 
   historyEmpty.style.display = filtrado.length ? "none" : "block";
+
+  if (historyPageInfo) {
+    historyPageInfo.textContent = `Página ${paginaHistoricoActual} de ${totalPaginas}`;
+  }
+  if (historyPrevBtn) historyPrevBtn.disabled = paginaHistoricoActual <= 1;
+  if (historyNextBtn) historyNextBtn.disabled = paginaHistoricoActual >= totalPaginas;
 }
 
 onSnapshot(collection(db, "avisos"), (snapshot) => {
@@ -1673,6 +1968,21 @@ onSnapshot(collection(db, "avisos"), (snapshot) => {
   urgencias.forEach((item) => {
     if (listaUrgente) listaUrgente.appendChild(crearTarjeta(item.docSnap, item.data));
   });
+
+  if (registroSeleccionado) {
+    const actualizado = historicoGlobal.find((item) => item.docSnap.id === registroSeleccionado.id);
+    if (actualizado) {
+      registroSeleccionado = { id: actualizado.docSnap.id, data: actualizado.data };
+      abrirFichaHistorico(actualizado.data);
+      if (historySelectionState) {
+        historySelectionState.textContent = `Seleccionado: ${actualizado.data.hotel || "ND Hoteles"} · ${etiquetaTipo(actualizado.data.tipo)}`;
+      }
+    } else {
+      registroSeleccionado = null;
+      if (historyDetailCard) historyDetailCard.style.display = "none";
+      if (historySelectionState) historySelectionState.textContent = "Selecciona un registro para editarlo.";
+    }
+  }
 
   renderHistorico();
 
